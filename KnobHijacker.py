@@ -59,8 +59,8 @@ class Hijack(QtWidgets.QWidget):
 
             screen_width, screen_height = screen_geometry.width(), screen_geometry.height()
 
-            # Set up the 4x4 grid
-            rows, cols = 4, 4
+            # Set up the 16x16 grid
+            rows, cols = 16, 16
 
             # Calculate the grid points for the current screen
             for row in range(rows):
