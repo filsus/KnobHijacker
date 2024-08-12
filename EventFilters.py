@@ -45,7 +45,7 @@ class CustomEventFilter(QtCore.QObject):
             return False
         
     def apply_rules(self, widget):
-        time.sleep(0.05)
+        time.sleep(0.1)
         nuke.executeInMainThread(widget.apply_knob_rules, (widget.knob_widget))
 
     def install_dag_event_filter(self):
