@@ -24,3 +24,10 @@ nuke.pluginAddPath("KnobHijacker")
 | Nuke15.0v4    |     Windows 10/11      |
 |:------------------:|:------------------:|
 | :heavy_check_mark: | :heavy_check_mark: |
+
+## Changelog
+### 1.0.0
+- Initial Release
+
+## License
+Licensed under MIT License. See [LICENSE.md](LICENSE.md) for more.
