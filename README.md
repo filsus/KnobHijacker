@@ -1,16 +1,8 @@
----
-title: "Knob Hijacker"
-date: "10 August, 2024"
-thumbnail: "/images/space.jpg"
----
+## KnobHijacker
 
-Welcome to the new blog, I hope you enjoy your stay! This is an example of how you can control what excerpt shows up.
+KnobHijacker is a Nuke (Foundry) Python tool, that enables the user to "hijack" chosen knobs and their QWidget container on a selected node, by either pressing a keyboard shortcut or a mouse button right-click. The behaviour of the QWidget container can be modified thus automating the value input from the user. For example, the size knob on the Blur node can be hijacked instantly prompting the user to enter the size value and confirm by pressing the Return key.
 
-<!-- end -->
-
-## Lorem ipsum dolor sit amet, consectetur adipiscing elit
-
-Sed urna justo, scelerisque consectetur pharetra vitae, facilisis vel diam. Maecenas auctor enim a volutpat mattis. Morbi sit amet turpis a purus ornare pellentesque sit amet et ipsum. Suspendisse imperdiet mi at felis aliquet, nec consectetur arcu dignissim. Sed vitae diam maximus, maximus diam ac, scelerisque mi.
+To view a detailed breakdown, visit my [blog page](https://filipsuska.com/blog/knobhijacker).
 
 *   Morbi sit amet turpis a purus
 *   Etiam tempor ultricies mi
