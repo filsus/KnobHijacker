@@ -6,13 +6,19 @@ KnobHijacker is a Nuke (Foundry) plugin, that enables the user to "hijack" chose
 
 To view a detailed breakdown, visit my [blog page](https://filipsuska.com/blog/knobhijacker).
 
+This plugin is also available on [Nukepedia]().
+
 ## Installation
 > Note: For more information on how to install custom plugins simply navigate to the official Foundry [website](https://learn.foundry.com/nuke/developers/151/pythondevguide/installing_plugins.html).
-### 1. Copy the repository to your `NUKE_PLUGIN_PATH`
-Make sure the full folder is copied over. For solo users copy all files in this repository to `Users/[my_user_name]/.nuke/KnobHijacker` directory.
-
+### 1. Copy the repository to your **[NUKE_PLUGIN_PATH](https://learn.foundry.com/nuke/developers/63/pythondevguide/installing_plugins.html)**
+If you have git installed on your PC simply clone the repo using:
+```console
+git clone https://github.com/filsus/KnobHijacker.git
+```
+Or download ZIP and unpack it inside.
+> Note: For solo users the typical `NUKE_PLUGIN_PATH` is your `Users/[user_Name]/.nuke` folder
 ### 2. Add the plugin to Nuke
-Open your `init.py` file inside a valid `NUKE_PLUGIN_PATH directory` and add the following code:
+Open/Create your `init.py` file inside a valid `NUKE_PLUGIN_PATH` directory and add the following code:
 
 ```python
 import nuke
