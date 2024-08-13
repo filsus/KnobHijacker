@@ -4,57 +4,47 @@
 from PySide2 import QtCore, QtGui, QtWidgets, QtOpenGL
 import KnobHijacker
 import nuke
-import threading
-import time
 
 class CustomEventFilter(QtCore.QObject):
     def __init__(self):
         super(CustomEventFilter, self).__init__()
 
-        self.install_dag_event_filter()
+        # Keep reference to the parent widget otherwise garbage collection deletes the dag reference
+        self.dag_parent = next((widget for widget in QtWidgets.QApplication.instance().allWidgets() if isinstance(widget, QtWidgets.QWidget) and 'DAG' in widget.objectName()), None)
+        if self.dag_parent:
+            self.dag = self.dag_parent.findChild(QtOpenGL.QGLWidget)
+            self.dag.installEventFilter(self)
 
     def eventFilter(self, widget, event):
-        
-        if isinstance(widget, QtWidgets.QWidget):
-            if event.type() == QtCore.QEvent.MouseButtonPress and event.button() == QtCore.Qt.MouseButton.RightButton:
-                
-                # Retrieve DAG widget again, otherwise you get Internal C++ object (PySide2.QtOpenGL.QGLWidget) already deleted.
-                for widget in QtWidgets.QApplication.allWidgets():
-                    if widget.windowTitle() == 'Node Graph':
-                        dag = widget.findChild(QtOpenGL.QGLWidget)
-                        break
+        if event.type() == QtCore.QEvent.MouseButtonPress and event.button() == QtCore.Qt.MouseButton.RightButton:
+            
+            # Send left click event to select the node
+            if self.dag_parent:
+                QtWidgets.QApplication.sendEvent(self.dag, 
+                                                 QtGui.QMouseEvent(QtCore.QEvent.MouseButtonPress, 
+                                                                   self.dag.mapFromGlobal(QtGui.QCursor.pos()), 
+                                                                   QtCore.Qt.LeftButton, QtCore.Qt.LeftButton,
+                                                                     QtCore.Qt.NoModifier))
 
-                # Send left click event to select the node
-                QtWidgets.QApplication.sendEvent(dag, QtGui.QMouseEvent(QtCore.QEvent.MouseButtonPress,  dag.mapFromGlobal(QtGui.QCursor.pos()), QtCore.Qt.LeftButton, QtCore.Qt.LeftButton, QtCore.Qt.NoModifier))
-                QtWidgets.QApplication.sendEvent(dag, QtGui.QMouseEvent(QtCore.QEvent.MouseButtonRelease,  dag.mapFromGlobal(QtGui.QCursor.pos()), QtCore.Qt.LeftButton, QtCore.Qt.LeftButton, QtCore.Qt.NoModifier))
+            # Check if a node is selected else propagate as default
+            selected_node = self.check_selected()
+            
+            if selected_node:
+                # Delay the hijack to allow button release to process, 
+                # else the buton release event will act on our widget, effectively spawning a menu
+                hijacker = KnobHijacker.Hijack()
+                QtCore.QTimer.singleShot(125, lambda:hijacker.run(selected_node))
+                return True
 
-                # Check if a node is selected and trigger hijack
-                try:
-                    node_context = nuke.selectedNode()
-                except ValueError:
-                    node_context = None
+        # Allow other events to be processed normally
+        return False
+    
+    def check_selected(self):
+        # Make sure the fake left-click has propagated
+        QtCore.QCoreApplication.processEvents()
 
-                if node_context:
-                    widget = KnobHijacker.Hijack().run(node_context)
-                    widget.show()
-                    # Postponing until the RightButtonRelease propagates
-                    threading.Thread(target=self.apply_rules, args=(widget,)).start()
-                    return True
-
-            # Allow other events to be processed normally
-            return False
-        
-    def apply_rules(self, widget):
-        time.sleep(0.1)
-        nuke.executeInMainThread(widget.apply_knob_rules, (widget.knob_widget))
-
-    def install_dag_event_filter(self):
-        dags = [widget for widget in QtWidgets.QApplication.instance().allWidgets() if widget.windowTitle() == 'Node Graph']
-        
-        if dags:
-            dag = dags[0].findChild(QtOpenGL.QGLWidget)
-            if dag:
-                dag.installEventFilter(self)
-        if not dags or not dag:
-            print("Couldn't install Event Filter, DAG not found")
-
+        try:
+            node = nuke.selectedNode()
+            return node
+        except ValueError:
+            return None
