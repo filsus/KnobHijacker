@@ -15,95 +15,44 @@ class Hijack(QtWidgets.QWidget):
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint | QtCore.Qt.Popup | QtCore.Qt.NoDropShadowWindowHint)
         self.layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.layout)
-        self.keyPressEvent = self.keyPressEvent
+        self.keyPressEvent = self.keyPressEvent #for some weird reason this needs to be contained otherwise the widget wont show
     
     # Make QButton widgets executable by pressing Enter
     def keyPressEvent(self,event):
         if event.key() == QtCore.Qt.Key_Return or event.key() == QtCore.Qt.Key_Enter:
             widget = self.layout.itemAt(0).widget()
             try:
+                self.close()
                 widget.click()
             except:
                 pass
-    
-    def find_properties_widget_recursive(self, screen_points):
-        properties_panels = []
-
-        def resursive(widget):
-            # Check if the current widget's name contains "Properties"
-            if widget.objectName() and "Properties" in widget.objectName():
-                return widget
-
-            # Recursively search in the parent widget
-            parent_widget = widget.parentWidget()
-            if parent_widget:
-                return resursive(parent_widget)
-            
-        for p in screen_points:
-            widget = QtWidgets.QApplication.instance().widgetAt(p)
-            if widget != None:
-                panel = resursive(widget)
-                properties_panels.append(panel)
-
-        return properties_panels
-    
    
-    def get_open_properties_panels(self):
-        # Get information about all screens
-        screens = QtWidgets.QApplication.screens()
-        # Create a list to store the screen points
-        screen_points = []
+    def apply_knob_rules(self):
+        if isinstance(self.knob_widget, QtWidgets.QComboBox):
+                self.knob_widget.currentTextChanged.connect(self.close)
+                self.knob_widget.showPopup()
 
-        for screen in screens:
-            screen_geometry = screen.geometry()
-
-            screen_width, screen_height = screen_geometry.width(), screen_geometry.height()
-
-            # Set up the 16x16 grid
-            rows, cols = 16, 16
-
-            # Calculate the grid points for the current screen
-            for row in range(rows):
-                for col in range(cols):
-                    # Calculate the corresponding points based on simple math
-                    x = col * (screen_width // cols) + 20 + screen_geometry.left()
-                    y = row * (screen_height // rows) + screen_geometry.top()
-
-                    # Append QPoint to the list
-                    screen_points.append(QtCore.QPoint(x, y))
-
-        # Pass the screen_points list to your function
-        return nuke.executeInMainThreadWithResult(self.find_properties_widget_recursive, (screen_points))
-
-    def apply_knob_rules(self, knob_widget):
-        if isinstance(knob_widget, QtWidgets.QComboBox):
-                knob_widget.currentTextChanged.connect(self.close)
-                knob_widget.showPopup()
-
-        elif isinstance(knob_widget, QtWidgets.QToolButton):
-            knob_widget.triggered.connect(self.close)
-            knob_widget.showMenu()
+        elif isinstance(self.knob_widget, QtWidgets.QToolButton):
+            self.knob_widget.triggered.connect(self.close)
+            self.knob_widget.showMenu()
             
-        elif len(knob_widget.children()) > 0:
-            knob = self.knob_widget.children()[1].children()[2]
-            if isinstance(knob, QtWidgets.QLineEdit):
-                knob.setFocus()
-                knob.selectAll()
-                knob.returnPressed.connect(self.close)
+        elif len(self.knob_widget.children()) > 0:
+            try:
+                knob = self.knob_widget.children()[1].children()[2]
+                if isinstance(knob, QtWidgets.QLineEdit):
+                    knob.setFocus()
+                    knob.selectAll()
+                    knob.returnPressed.connect(self.close)
+            except:
+                pass
 
     def refresh_control_panel_hijacked(self):
         def _showPanel():
             nuke.executeInMainThread(self.node.showControlPanel, ())
+        if self.node:
+            self.node.hideControlPanel()
+            threading.Thread(target=_showPanel).start()
 
-        self.node.hideControlPanel()
-        threading.Thread(target=_showPanel).start()
-    
-    def closeEvent(self, event):
-        self.refresh_control_panel_hijacked()
-        self.layout.removeWidget(self.knob_widget)
-        self.knob_widget.deleteLater()
-        event.accept()
-        
     def get_widget_tooltip(self,knob_name):
         knob_tooltip = self.node[knob_name].tooltip()
         if knob_tooltip == "":
@@ -142,12 +91,7 @@ class Hijack(QtWidgets.QWidget):
                 if found_child:
                     return found_child
         return None 
-    
-    def get_nodes_property_panel(self, panels):
-        filtered_list = [value for value in panels if value is not None]
-        node_properties = filtered_list[0]
-        return node_properties
-    
+
     def show_knob_selection_dialog(self):
 
         # Create a dialog
@@ -170,7 +114,6 @@ class Hijack(QtWidgets.QWidget):
 
         # Connect button actions
         def ok_clicked():
-            selected_knob_name = knob_combo_box.currentText()
             dialog.accept()
 
         def cancel_clicked():
@@ -227,29 +170,41 @@ class Hijack(QtWidgets.QWidget):
             return settings_data[self.node.Class()]
 
     def run(self, node):
+        self.show()
         self.node = node
+
         # Load knob name from json file, if it does not exist ask user to select one
         knob_name = self.load_knob_to_hijack()
         if knob_name != None:
+            # convert the nuke knob tooltip into QWidget HTML toolTip
             tooltip = self.get_widget_tooltip(knob_name) 
 
-            # Force open properties panel for selected node and retrieve the widget that holds it
+            # Force open Properties panel to show the widget
             self.node.showControlPanel()
-            properties_panels = self.get_open_properties_panels()
-            properties_panel = self.get_nodes_property_panel(properties_panels)
+            properties_panel = next((widget for widget in QtWidgets.QApplication.instance().allWidgets() if isinstance(widget, QtWidgets.QWidget) and 'Properties' in widget.objectName()), None)
             
-            if properties_panel != None:
-                # Use the nuke.Knob tooltip to find the child widget bearing the same tooltip                                
+            if properties_panel:
+                # Find a child with the updated toolTip                                
                 self.knob_widget = self.find_child_with_tooltip(properties_panel, tooltip) 
-                
-                if self.knob_widget != None:
+                if self.knob_widget:
                     self.layout.addWidget(self.knob_widget)
 
                     # Move the widget to cursor location
                     cursor = QtGui.QCursor.pos() 
                     self.move(QtCore.QPoint(cursor.x()-60, cursor.y()+20))
 
+                    # Modify the knob widget behaviour               
+                    self.apply_knob_rules()
+
+                    return
+                
                 else:
                     nuke.message("Could not find the widget for selected Node. Please report the the developers.")
-                
-        return self
+        self.hide()
+
+    def closeEvent(self, event):
+        self.refresh_control_panel_hijacked()
+        if self.knob_widget:
+            self.layout.removeWidget(self.knob_widget)
+            self.knob_widget.deleteLater()
+        event.accept()
