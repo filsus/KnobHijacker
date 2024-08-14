@@ -6,7 +6,7 @@ KnobHijacker is a Nuke (Foundry) plugin, that enables the user to "hijack" chose
 
 To view a detailed breakdown, visit my [blog page](https://filipsuska.com/blog/knobhijacker).
 
-This plugin is also available on [Nukepedia]().
+This plugin is also available on [Nukepedia](https://www.nukepedia.com/python/nodegraph/knobhijacker).
 
 ## Installation
 > Note: For more information on how to install custom plugins simply navigate to the official Foundry [website](https://learn.foundry.com/nuke/developers/151/pythondevguide/installing_plugins.html).
