@@ -4,7 +4,7 @@
 
 KnobHijacker is a Nuke (Foundry) plugin, that enables the user to "hijack" chosen knobs and their QWidget container on a selected node, by either pressing a keyboard shortcut or a mouse button right-click. The behaviour of the QWidget container can be modified thus automating the value input from the user. For example, the size knob on the Blur node can be hijacked instantly prompting the user to enter the size value and confirm by pressing the Return key.
 
-To view a detailed breakdown, visit my [blog page](https://filipsuska.com/blog/knobhijacker).
+To view a detailed breakdown, visit my [blog page](https://filipsuska.com/blog/01_knobhijacker).
 
 This plugin is also available on [Nukepedia](https://www.nukepedia.com/python/nodegraph/knobhijacker).
 
