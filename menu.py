@@ -14,7 +14,7 @@ add_hijacker_menus()'''
 
 def add_hijacker_menus():
     slider_menu = nuke.toolbar("Nodes")
-    slider_menu.addCommand("Fix Gizmos/Scripts/Hijacker/Hijack Knob", "KnobHijacker.Hijack().run(nuke.selectedNode())", "-")
-    slider_menu.addCommand("Fix Gizmos/Scripts/Hijacker/Refresh", refresh_command)
+    slider_menu.addCommand("Hijacker/Hijack Knob", "KnobHijacker.Hijack().run(nuke.selectedNode())", "-")
+    slider_menu.addCommand("Hijacker/Refresh", refresh_command)
 
 add_hijacker_menus()
